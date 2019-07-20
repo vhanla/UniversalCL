@@ -3,10 +3,10 @@ unit UCL.TUText;
 interface
 
 uses
-  UCL.Classes, UCL.TUThemeManager,
+  UCL.Classes, UCL.TUThemeManager, UCL.Utils,
   System.Classes, System.SysUtils,
-  Winapi.Windows,
-  VCL.Controls, VCL.StdCtrls;
+  Winapi.Windows, GdiPAPI, GdipObj,
+  VCL.Controls, VCL.StdCtrls, VCL.Graphics;
 
 type
   TUTextKind = (tkNormal, tkDescription, tkEntry, tkHeading, tkTitle);
@@ -23,6 +23,9 @@ type
       constructor Create(aOwner: TComponent); override;
       procedure UpdateTheme;
       procedure UpdateTextKind;
+
+    protected
+      procedure Paint; override;
 
     published
       property ThemeManager: TUThemeManager read FThemeManager write SetThemeManager;
@@ -64,6 +67,74 @@ begin
 end;
 
 { SETTERS }
+
+procedure TUText.Paint;
+var
+  TextX, TextY, TextW, TextH: Integer;
+
+  bmp: TBitmap;
+  gfont: TGPFont;
+  ggraph: TGPGraphics;
+  gpen: TGPPen;
+  gbrush: TGPSolidBrush;
+  gstring: TGPStringFormat;
+  gtxt: WideString;
+begin
+  inherited;
+// Draw using GdiPlus
+  bmp := TBitmap.Create;
+  try
+    bmp.PixelFormat := pf32bit;
+    bmp.SetSize(Width, Height);
+
+    //  Paint background
+    bmp.Canvas.Brush.Handle := CreateSolidBrushWithAlpha(Color);
+    bmp.Canvas.FillRect(Rect(0, 0, Width, Height));
+
+    ggraph := TGPGraphics.Create(bmp.Canvas.Handle);
+    try
+//      ggraph.SetSmoothingMode(SmoothingModeAntiAlias);
+
+      gfont := TGPFont.Create(Font.Name, Font.Size, FontStyleRegular, UnitPoint);
+      try
+        gbrush := TGPSolidBrush.Create(MakeGDIPColor(clBlack));
+        try
+          gpen := TGPPen.Create(MakeGDIPColor(clBlack));
+          try
+            gstring := TGPStringFormat.Create;
+            try
+            //////////////////////////
+              gbrush.SetColor(MakeGDIPColor(Font.Color));
+              Canvas.Font := Font;
+              TextW := Canvas.TextWidth(Text);
+              TextH := Canvas.TextHeight(Text);
+
+                  TextX := (Width - TextW) div 2;
+                  TextY := (Height - TextH) div 2;
+
+              ggraph.DrawString(Caption, Length(Caption),gfont, MakePoint(TextX,(1.0*TextY)), nil, gbrush);
+            //////////////////////////
+            finally
+              gstring.Free;
+            end;
+          finally
+            gpen.Free;
+          end;
+        finally
+          gbrush.Free;
+        end;
+      finally
+        gfont.Free;
+      end;
+    finally
+      ggraph.Free;
+    end;
+
+    Canvas.Draw(0, 0, bmp);
+  finally
+    bmp.Free;
+  end;
+end;
 
 procedure TUText.SetTextKind(Value: TUTextKind);
 begin

@@ -3,7 +3,7 @@ unit UCL.TUProgressBar;
 interface
 
 uses
-  UCL.Classes,
+  UCL.Classes, UCL.Utils,
   UCL.SystemSettings, UCL.TUThemeManager,
   System.SysUtils, System.Classes, System.Types,
   VCL.Controls, VCL.ExtCtrls, VCL.Graphics,
@@ -192,11 +192,13 @@ begin
     end;
 
   //  Paint background (not full, only unfilled area)
-  Canvas.Brush.Color := BackColor;
+  //Canvas.Brush.Color := BackColor;
+  Canvas.Brush.Handle := CreateSolidBrushWithAlpha(BackColor);
   Canvas.FillRect(BackRect);
 
   //  Paint foreround
-  Canvas.Brush.Color := ForeColor;
+  //Canvas.Brush.Color := ForeColor;
+  Canvas.Brush.Handle := CreateSolidBrushWithAlpha(ForeColor);
   Canvas.FillRect(FillRect);
 end;
 

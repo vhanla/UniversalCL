@@ -4,12 +4,14 @@ interface
 
 uses
   VCL.Graphics, VCL.GraphUtil,
-  Winapi.Windows;
+  Winapi.Windows, GdiPAPI;
 
 //  Color utils
 function BrightenColor(aColor: TColor; Delta: Integer): TColor;
 function GetTextColorFromBackground(BackgroundColor: TColor): TColor;
 function ChangeColor(aColor: TColor; Base: Single): TColor;
+function CreateSolidBrushWithAlpha(Color: TColor; Alpha: Byte = $FF): HBRUSH;
+function MakeGDIPColor(C: TColor; A: Integer = 255): Cardinal;
 
 implementation
 
@@ -50,5 +52,43 @@ begin
   B := Round(GetBValue(C) * Base);
   Result := RGB(R, G, B);
 end;
+
+  function CreatePreMultipliedRGBQuad(Color: TColor; Alpha: Byte = $FF): TRGBQuad;
+  begin
+    Color := ColorToRGB(Color);
+    Result.rgbBlue := MulDiv(GetBValue(Color), Alpha, $FF);
+    Result.rgbGreen := MulDiv(GetGValue(Color), Alpha, $FF);
+    Result.rgbRed := MulDiv(GetRValue(Color), Alpha, $FF);
+    Result.rgbReserved := Alpha;
+  end;
+
+  function CreateSolidBrushWithAlpha(Color: TColor; Alpha: Byte = $FF): HBRUSH;
+  var
+    Info: TBitmapInfo;
+  begin
+    FillChar(Info, SizeOf(Info), 0);
+    with Info.bmiHeader do
+    begin
+      biSize := SizeOf(Info.bmiHeader);
+      biWidth := 1;
+      biHeight := 1;
+      biPlanes := 1;
+      biBitCount := 32;
+      biCompression := BI_RGB;
+    end;
+    Info.bmiColors[0] := CreatePreMultipliedRGBQuad(Color, Alpha);
+    Result := CreateDIBPatternBrushPt(@Info, 0);
+  end;
+
+  function MakeGDIPColor(C: TColor; A: Integer = 255): Cardinal;
+  var
+    tmpRGB : TColorRef;
+  begin
+    tmpRGB := ColorToRGB(C);
+    result := ((DWORD(GetBValue(tmpRGB)) shl  BlueShift) or
+               (DWORD(GetGValue(tmpRGB)) shl GreenShift) or
+               (DWORD(GetRValue(tmpRGB)) shl   RedShift) or
+               (DWORD(A) shl AlphaShift));
+  end;
 
 end.

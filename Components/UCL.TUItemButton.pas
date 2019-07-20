@@ -518,7 +518,8 @@ begin
     end;
 
   //  Paint background
-  Canvas.Brush.Color := BackColor;
+  //Canvas.Brush.Color := BackColor;
+  Canvas.Brush.Handle := CreateSolidBrushWithAlpha(BackColor);
   Canvas.FillRect(Rect(0, 0, Width, Height));
 
   Canvas.Font := IconFont;

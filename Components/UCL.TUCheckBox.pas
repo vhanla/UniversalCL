@@ -3,9 +3,9 @@
 interface
 
 uses
-  UCL.Classes, UCL.TUThemeManager,
+  UCL.Classes, UCL.TUThemeManager, UCL.Utils,
   System.Classes, System.Types, System.Math,
-  Winapi.Messages, Winapi.Windows,
+  Winapi.Messages, Winapi.Windows, GdiPAPI, GdipObj,
   VCL.Controls, VCL.Graphics;
 
 type
@@ -204,11 +204,147 @@ procedure TUCustomCheckBox.Paint;
 var
   TextH: Integer;
   IconH: Integer;
+
+  bmp: TBitmap;
+  gfont: TGPFont;
+  ggraph: TGPGraphics;
+  gpen: TGPPen;
+  gbrush: TGPSolidBrush;
+  gstring: TGPStringFormat;
+  gtxt: WideString;
 begin
   Resize;
 
+// Draw using GdiPlus
+  bmp := TBitmap.Create;
+  try
+    bmp.PixelFormat := pf32bit;
+    bmp.SetSize(Width, Height);
+
+    Canvas.Brush.Style := bsSolid;
+    //Canvas.Brush.Color := Color;  //  Paint empty background
+    Canvas.Brush.Handle := CreateSolidBrushWithAlpha(Color);  //  Paint empty background
+    Canvas.FillRect(Rect(0, 0, Width, Height));
+    Canvas.Brush.Style := bsClear;
+
+    bmp.Canvas.Brush.Handle := CreateSolidBrushWithAlpha(Color);
+    bmp.Canvas.FillRect(Rect(0, 0, Width, Height));
+
+    ggraph := TGPGraphics.Create(bmp.Canvas.Handle);
+    try
+//      ggraph.SetSmoothingMode(SmoothingModeAntiAlias);
+
+      gfont := TGPFont.Create(Font.Name, Font.Size, FontStyleRegular, UnitPoint);
+      try
+        gbrush := TGPSolidBrush.Create(MakeGDIPColor(clBlack));
+        try
+          gpen := TGPPen.Create(MakeGDIPColor(clBlack));
+          try
+            gstring := TGPStringFormat.Create;
+            try
+            //////////////////////////
+            //  Paint text
+              Canvas.Font := Self.Font;
+              if ThemeManager = nil then
+                Canvas.Font.Color := $000000
+              else if ThemeManager.Theme = utLight then
+                Canvas.Font.Color := $000000
+              else
+                Canvas.Font.Color := $FFFFFF;
+              gbrush.SetColor(MakeGDIPColor(Canvas.Font.Color));
+
+              TextH := Canvas.TextHeight(Text);
+              Canvas.TextOut(TEXT_LEFT, (Height - TextH) div 2, Text);
+              ggraph.DrawString(Text, Length(Text), gfont, MakePoint(TEXT_LEFT,(Height - TextH) / 2), nil, gbrush);
+
+              //  Paint check
+              Canvas.Font := IconFont;
+              gfont.Free;
+              gfont := TGPFont.Create(IconFont.Name, IconFont.Size, FontStyleRegular, UnitPoint);
+              case State of
+                cbsChecked:
+                  begin
+                    //  Paint only check icon
+                    if ThemeManager = nil then
+                      Canvas.Font.Color := CustomActiveColor
+                    else
+                      Canvas.Font.Color := ThemeManager.ActiveColor;
+                    gbrush.SetColor(MakeGDIPColor(Canvas.Font.Color));
+                    IconH := Canvas.TextHeight('');
+
+                    Canvas.TextOut(ICON_LEFT, (Height - IconH) div 2, '');
+                    ggraph.DrawString('', Length(''), gfont, MakePoint(ICON_LEFT,(Height - IconH) / 2), nil, gbrush);
+                  end;
+
+                cbsUnchecked:
+                  begin
+                    //  Paint a empty box
+                    if ThemeManager = nil then
+                      Canvas.Font.Color := $000000
+                    else if ThemeManager.Theme = utLight then
+                      Canvas.Font.Color := $000000
+                    else
+                      Canvas.Font.Color := $FFFFFF;
+                    gbrush.SetColor(MakeGDIPColor(Canvas.Font.Color));
+                    IconH := Canvas.TextHeight('');
+
+                    Canvas.TextOut(ICON_LEFT, (Height - IconH) div 2, '');
+                    ggraph.DrawString('', Length(''), gfont, MakePoint(ICON_LEFT,(Height - IconH) / 2), nil, gbrush);
+                  end;
+
+                cbsGrayed:
+                  begin
+                    //  Paint border
+                    if ThemeManager = nil then
+                      Canvas.Font.Color := CustomActiveColor
+                    else
+                      Canvas.Font.Color := ThemeManager.ActiveColor;
+                    gbrush.SetColor(MakeGDIPColor(Canvas.Font.Color));
+                    IconH := Canvas.TextHeight('');
+                    Canvas.TextOut(ICON_LEFT, (Height - IconH) div 2, '');
+                    ggraph.DrawString('', Length(''), gfont, MakePoint(ICON_LEFT,(Height - IconH) / 2), nil, gbrush);
+
+
+                    //  Paint small box
+                    IconH := Canvas.TextHeight('');
+                    if ThemeManager = nil then
+                      Canvas.Font.Color := $000000
+                    else if ThemeManager.Theme = utLight then
+                      Canvas.Font.Color := $000000
+                    else
+                      Canvas.Font.Color := $FFFFFF;
+                    gbrush.SetColor(MakeGDIPColor(Canvas.Font.Color));
+                    Canvas.TextOut(ICON_LEFT, (Height - IconH) div 2, '');
+                    ggraph.DrawString('', Length(''), gfont, MakePoint(ICON_LEFT,(Height - IconH) / 2), nil, gbrush);
+                  end;
+              end;
+            //////////////////////////
+            finally
+              gstring.Free;
+            end;
+          finally
+            gpen.Free;
+          end;
+        finally
+          gbrush.Free;
+        end;
+      finally
+        gfont.Free;
+      end;
+    finally
+      ggraph.Free;
+    end;
+
+    Canvas.Draw(0, 0, bmp);
+  finally
+    bmp.Free;
+  end;
+
+  Exit;
+
   Canvas.Brush.Style := bsSolid;
-  Canvas.Brush.Color := Color;  //  Paint empty background
+  //Canvas.Brush.Color := Color;  //  Paint empty background
+  Canvas.Brush.Handle := CreateSolidBrushWithAlpha(Color);  //  Paint empty background
   Canvas.FillRect(Rect(0, 0, Width, Height));
   Canvas.Brush.Style := bsClear;
 

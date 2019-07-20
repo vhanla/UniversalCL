@@ -18,6 +18,9 @@ type
       FDoubleClickMaximize: Boolean;
       FUseNormalStyle: Boolean;
 
+      FVerticalAlignment: TVerticalAlignment;
+      FAlignment: TAlignment;
+
       procedure SetThemeManager(const Value: TUThemeManager);
 
       //  Setters
@@ -30,6 +33,9 @@ type
     public
       constructor Create(aOwner: TComponent); override;
       procedure UpdateTheme;
+
+    protected
+      procedure Paints;// override;
 
     published
       property ThemeManager: TUThemeManager read FThemeManager write SetThemeManager;
@@ -80,6 +86,34 @@ type
 implementation
 
 { THEME }
+procedure TUCustomCaptionBar.Paints;
+const
+  Alignments: array[TAlignment] of Longint = (DT_LEFT, DT_RIGHT, DT_CENTER);
+  VerticalAlignments: array[TVerticalAlignment] of Longint = (DT_TOP, DT_BOTTOM, DT_VCENTER);
+var
+  Flags: Integer;
+  Rect: TRect;
+begin
+  inherited;
+
+  Rect := GetClientRect;
+  with Canvas do
+  begin
+    Brush.Handle := CreateSolidBrushWithAlpha($DDDDDD, 255);
+    FillRect(Rect);
+    if ShowCaption and (Caption <> '') then
+    begin
+      Flags := DT_EXPANDTABS or DT_SINGLELINE or
+        VerticalAlignments[FVerticalAlignment] or Alignments[FAlignment];
+      Flags := DrawTextBiDiModeFlags(Flags);
+      Font := Self.Font;
+      //SetTextColor(Handle, CreateSolidBrushWithAlpha(Font.Color, 255));
+      //SetBkMode(Handle, TRANSPARENT);
+      DrawText(Handle, Caption, - 1, Rect, Flags);
+    end;
+
+  end;
+end;
 
 procedure TUCustomCaptionBar.SetThemeManager(const Value: TUThemeManager);
 begin

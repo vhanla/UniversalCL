@@ -4,7 +4,7 @@ interface
 
 uses
   UCL.Classes, UCL.SystemSettings, UCL.TUThemeManager, UCL.Utils,
-  Winapi.Messages, Winapi.Windows,
+  Winapi.Messages, Winapi.Windows, GdiPAPI, GdipObj,
   System.Classes, System.Types,
   VCL.Controls, VCL.Graphics, VCL.ExtCtrls, VCL.StdCtrls, VCL.ImgList;
 
@@ -366,6 +366,14 @@ var
   DetailX, DetailY, DetailW, DetailH: Integer;
 
   BackColor, TextColor, DetailColor: TColor;
+
+  bmp: TBitmap;
+  gfont: TGPFont;
+  ggraph: TGPGraphics;
+  gpen: TGPPen;
+  gbrush: TGPSolidBrush;
+  gstring: TGPStringFormat;
+  gtxt: WideString;
 begin
   inherited;
 
@@ -403,8 +411,139 @@ begin
       DetailColor := DefDetailColor[aTheme, ButtonState];
     end;
 
+  // Draw using GdiPlus
+  bmp := TBitmap.Create;
+  try
+    bmp.PixelFormat := pf32bit;
+    bmp.SetSize(Width, Height);
+
+    bmp.Canvas.Brush.Handle := CreateSolidBrushWithAlpha(BackColor);
+    bmp.Canvas.FillRect(Rect(0, 0, Width, Height));
+
+    ggraph := TGPGraphics.Create(bmp.Canvas.Handle);
+    try
+      ggraph.SetSmoothingMode(SmoothingModeAntiAlias);
+
+      gfont := TGPFont.Create(SymbolFont.Name, SymbolFont.Size, FontStyleRegular, UnitPoint);
+      try
+        gbrush := TGPSolidBrush.Create(MakeGDIPColor(clBlack));
+        try
+          gpen := TGPPen.Create(MakeGDIPColor(clBlack));
+          try
+            gstring := TGPStringFormat.Create;
+            try
+            //////////////////////////
+            //  Paint icon
+              if ShowIcon = true then
+                if ImageKind = ikFontIcon then
+                  begin
+                    Canvas.Font := SymbolFont;
+                    //Canvas.Font.Color := TextColor;
+                    gbrush.SetColor(MakeGDIPColor(TextColor));
+                    IconW := Canvas.TextWidth(SymbolChar);
+                    IconH := Canvas.TextHeight(SymbolChar);
+                    if Orientation = oHorizontal then
+                      begin
+                        IconX := (TextOffset - IconW) div 2;
+                        IconY := (Height - IconH) div 2;
+                      end
+                    else
+                      begin
+                        IconX := (Width - IconW) div 2;
+                        IconY := (TextOffset - IconH) div 2;
+                      end;
+                    Canvas.TextOut(IconX, IconY, SymbolChar);
+                    ggraph.DrawString(SymbolChar, Length(SymbolChar),gfont, MakePoint(IconX,(1.0*IconY )), nil, gbrush);
+                  end
+                else if (Images <> nil) and (ImageIndex >= 0) then
+                  begin
+                    ImgW := Images.Width;
+                    ImgH := Images.Height;
+                    if Orientation = oHorizontal then
+                      begin
+                        ImgX := (TextOffset - ImgW) div 2;
+                        ImgY := (Height - ImgH) div 2;
+                      end
+                    else
+                      begin
+                        ImgX := (Width - ImgW) div 2;
+                        ImgY := (TextOffset - ImgH) div 2;
+                      end;
+                    //Images.Draw(Canvas, ImgX, ImgY, ImageIndex, Enabled);
+                    Images.Draw(bmp.Canvas, ImgX, ImgY, ImageIndex, Enabled);
+                  end;
+
+              //  Paint text
+              Canvas.Font := TextFont;
+              gfont.Free;
+              gfont := TGPFont.Create(TextFont.Name, TextFont.Size, FontStyleRegular, UnitPoint);
+              Canvas.Font.Color := TextColor;
+              gbrush.SetColor(MakeGDIPColor(TextColor));
+              TextW := Canvas.TextWidth(Text);
+              TextH := Canvas.TextHeight(Text);
+              if Orientation = oHorizontal then
+                begin
+                  TextX := TextOffset;
+                  TextY := (Height - TextH) div 2;
+                end
+              else
+                begin
+                  TextX := (Width - TextW) div 2;
+                  TextY := TextOffset;
+                end;
+              Canvas.TextOut(TextX, TextY, Text);
+              ggraph.DrawString(Text, Length(Text),gfont, MakePoint(TextX,(1.0 * TextY)), nil, gbrush);
+
+              //  Paint detail
+              if ShowDetail = true then
+                begin
+                  Canvas.Font := DetailFont;
+                  gfont.Free;
+                  gfont := TGPFont.Create(DetailFont.Name, DetailFont.Size, FontStyleRegular, UnitPoint);
+                  Canvas.Font.Color := DetailColor;
+                  gbrush.SetColor(MakeGDIPColor(DetailColor));
+                  DetailW := Canvas.TextWidth(Detail);
+                  DetailH := Canvas.TextHeight(Detail);
+                  if Orientation = oHorizontal then
+                    begin
+                      DetailX := Width - DetailRightOffset - DetailW;
+                      DetailY := (Height - DetailH) div 2;
+                    end
+                  else
+                    begin
+                      DetailX := (Width - DetailW) div 2;
+                      DetailY := Height - DetailRightOffset - DetailH;
+                    end;
+                  Canvas.TextOut(DetailX, DetailY, Detail);
+                  ggraph.DrawString(Detail, Length(Detail), gfont, MakePoint(DetailX,(1.0*DetailY)), nil, gbrush);
+                end;
+            //////////////////////////
+            finally
+              gstring.Free;
+            end;
+          finally
+            gpen.Free;
+          end;
+        finally
+          gbrush.Free;
+        end;
+      finally
+        gfont.Free;
+      end;
+    finally
+      ggraph.Free;
+    end;
+
+    Canvas.Draw(0, 0, bmp);
+
+  finally
+    bmp.Free;
+  end;
+
+  Exit;
   //  Paint background
-  Canvas.Brush.Color := BackColor;
+  //Canvas.Brush.Color := BackColor;
+  Canvas.Brush.Handle := CreateSolidBrushWithAlpha(BackColor);
   Canvas.FillRect(Rect(0, 0, Width, Height));
 
   //  Paint icon

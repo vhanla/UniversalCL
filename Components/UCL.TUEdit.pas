@@ -489,7 +489,8 @@ begin
   BorderThickness := 2;
   BorderThickness := Round(BorderThickness * CurrentPPI / 96);
 
-  Canvas.Brush.Color := FEdit.Color;
+  //Canvas.Brush.Color := FEdit.Color;
+  Canvas.Brush.Handle := CreateSolidBrushWithAlpha(FEdit.Color);
   Canvas.FillRect(Rect(BorderThickness, BorderThickness, Width - BorderThickness, Height - BorderThickness));
 end;
 

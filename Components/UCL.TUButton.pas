@@ -4,7 +4,7 @@ interface
 
 uses
   UCL.Classes, UCL.TUThemeManager, UCL.Utils,
-  Winapi.Messages,
+  Winapi.Messages, Winapi.Windows, GdiPAPI, GdipObj,
   System.Classes, System.Types,
   VCL.Controls, VCL.Graphics, VCL.ExtCtrls, VCL.StdCtrls, VCL.ImgList;
 
@@ -259,6 +259,14 @@ var
   ImgX, ImgY, ImgW, ImgH: Integer;
   BorderThickness, ThicknessPos: Integer;
   BorderColor, BackColor, TextColor: TColor;
+
+  bmp: TBitmap;
+  gfont: TGPFont;
+  ggraph: TGPGraphics;
+  gpen: TGPPen;
+  gbrush: TGPSolidBrush;
+  gstring: TGPStringFormat;
+  gtxt: WideString;
 begin
   inherited;
 
@@ -301,8 +309,111 @@ begin
       TextColor := GetTextColorFromBackground(Color);
     end;
 
+  // Draw using GdiPlus
+  bmp := TBitmap.Create;
+  try
+    bmp.PixelFormat := pf32bit;
+    bmp.SetSize(Width, Height);
+
+    //  Paint background
+    //Canvas.Brush.Color := BackColor;
+    Canvas.Brush.Handle := CreateSolidBrushWithAlpha(BackColor);
+    Canvas.FillRect(Rect(0, 0, Width, Height));
+    bmp.Canvas.Brush.Handle := CreateSolidBrushWithAlpha(BackColor);
+    bmp.Canvas.FillRect(Rect(0, 0, Width, Height));
+
+    ggraph := TGPGraphics.Create(bmp.Canvas.Handle);
+    try
+//      ggraph.SetSmoothingMode(SmoothingModeAntiAlias);
+
+      gfont := TGPFont.Create(Font.Name, Font.Size, FontStyleRegular, UnitPoint);
+      try
+        gbrush := TGPSolidBrush.Create(MakeGDIPColor(clBlack));
+        try
+          gpen := TGPPen.Create(MakeGDIPColor(clBlack));
+          try
+            gstring := TGPStringFormat.Create;
+            try
+            //////////////////////////
+              //  Paint border
+              BorderThickness := 2; //  Default for 100% scale
+              BorderThickness := Round(BorderThickness * CurrentPPI / 96);
+              if BorderThickness mod 2 = 0 then
+                ThicknessPos := BorderThickness div 2 - 1
+              else
+                ThicknessPos := BorderThickness div 2;
+
+              Canvas.Pen.Handle := CreateSolidBrushWithAlpha(BorderColor);
+              gpen.SetColor(MakeGDIPColor(BorderColor));
+              Canvas.Pen.Width := BorderThickness;
+              gpen.SetWidth(BorderThickness);
+              Canvas.Rectangle(Rect(
+                BorderThickness div 2,
+                BorderThickness div 2,
+                Width - ThicknessPos,
+                Height - ThicknessPos));
+              ggraph.DrawRectangle(gpen,
+                BorderThickness div 2,
+                BorderThickness div 2,
+                Width - ThicknessPos - BorderThickness,
+                Height - ThicknessPos - BorderThickness);
+
+              Font.Color := TextColor;
+              gbrush.SetColor(MakeGDIPColor(TextColor));
+              SetTextColor(Canvas.Handle, CreateSolidBrushWithAlpha(Font.Color));
+              Canvas.Font := Font;
+
+              TextW := Canvas.TextWidth(Text);
+              TextH := Canvas.TextHeight(Text);
+
+              if (Images <> nil) and (ImageIndex >= 0) then
+                begin
+                  ImgW := Images.Width;
+                  ImgH := Images.Height;
+                  ImgX := (Width - ImgW - IMG_SPACE - TextW) div 2;
+                  ImgY := (Height - ImgH) div 2;
+                  Images.Draw(Canvas, ImgX, ImgY, ImageIndex, Enabled);
+                  Images.Draw(bmp.Canvas, ImgX, ImgY, ImageIndex, Enabled);
+
+                  TextX := ImgX + ImgW + IMG_SPACE;
+                  TextY := (Height - TextH) div 2;
+                end
+              else
+                begin
+                  TextX := (Width - TextW) div 2;
+                  TextY := (Height - TextH) div 2;
+                end;
+
+              //  Paint text
+              Canvas.TextOut(TextX, TextY, Text);
+              ggraph.DrawString(Text, Length(Text), gfont, MakePoint(TextX,(1.0*TextY)), nil, gbrush);
+            //////////////////////////
+            finally
+              gstring.Free;
+            end;
+          finally
+            gpen.Free;
+          end;
+        finally
+          gbrush.Free;
+        end;
+      finally
+        gfont.Free;
+      end;
+    finally
+      ggraph.Free;
+    end;
+
+    Canvas.Draw(0, 0, bmp);
+  finally
+    bmp.Free;
+  end;
+
+  Exit;
+
   //  Paint background
-  Canvas.Brush.Color := BackColor;
+  //Canvas.Brush.Color := BackColor;
+  Canvas.Brush.Handle := CreateSolidBrushWithAlpha(BackColor);
   Canvas.FillRect(Rect(0, 0, Width, Height));
 
   //  Paint border
@@ -313,7 +424,7 @@ begin
   else
     ThicknessPos := BorderThickness div 2;
 
-  Canvas.Pen.Color := BorderColor;
+  Canvas.Pen.Handle := CreateSolidBrushWithAlpha(BorderColor);
   Canvas.Pen.Width := BorderThickness;
   Canvas.Rectangle(Rect(
     BorderThickness div 2,
@@ -322,6 +433,7 @@ begin
     Height - ThicknessPos));
 
   Font.Color := TextColor;
+  SetTextColor(Canvas.Handle, CreateSolidBrushWithAlpha(Font.Color));
   Canvas.Font := Font;
 
   TextW := Canvas.TextWidth(Text);

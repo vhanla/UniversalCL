@@ -11,6 +11,8 @@ object formDemo: TformDemo
   Font.Height = -12
   Font.Name = 'Segoe UI'
   Font.Style = []
+  GlassFrame.Enabled = True
+  GlassFrame.SheetOfGlass = True
   OldCreateOrder = False
   Visible = True
   StyleElements = []
@@ -25,7 +27,7 @@ object formDemo: TformDemo
     Cursor = crHandPoint
     Caption = 'Embarcadero homepage'
     Font.Charset = DEFAULT_CHARSET
-    Font.Color = 14120960
+    Font.Color = 14051691
     Font.Height = -13
     Font.Name = 'Segoe UI'
     Font.Style = []
@@ -959,7 +961,7 @@ object formDemo: TformDemo
   end
   object UItemButton2: TUItemButton
     Left = 60
-    Top = 510
+    Top = 507
     Width = 311
     Height = 41
     Hint = 'ABC'
@@ -1201,7 +1203,7 @@ object formDemo: TformDemo
   object drawerNavigation: TUPanel
     Left = 0
     Top = 92
-    Width = 45
+    Width = 194
     Height = 491
     ThemeManager = AppTheme
     CustomTextColor = clBlack
@@ -1222,7 +1224,7 @@ object formDemo: TformDemo
     object buttonOpenMenu: TUSymbolButton
       Left = 0
       Top = 0
-      Width = 45
+      Width = 194
       Height = 45
       ThemeManager = AppTheme
       SymbolFont.Charset = DEFAULT_CHARSET
@@ -1246,7 +1248,7 @@ object formDemo: TformDemo
       Detail = 'Detail'
       ShowDetail = False
       Align = alTop
-      Constraints.MaxWidth = 45
+      Constraints.MaxWidth = 194
       TabOrder = 0
       TabStop = True
       OnClick = buttonOpenMenuClick
@@ -1254,7 +1256,7 @@ object formDemo: TformDemo
     object buttonMenuSettings: TUSymbolButton
       Left = 0
       Top = 90
-      Width = 45
+      Width = 194
       Height = 45
       ThemeManager = AppTheme
       SymbolFont.Charset = DEFAULT_CHARSET
@@ -1285,7 +1287,7 @@ object formDemo: TformDemo
     object buttonMenuProfile: TUSymbolButton
       Left = 0
       Top = 180
-      Width = 45
+      Width = 194
       Height = 45
       ThemeManager = AppTheme
       SymbolFont.Charset = DEFAULT_CHARSET
@@ -1315,7 +1317,7 @@ object formDemo: TformDemo
     object buttonMenuSave: TUSymbolButton
       Left = 0
       Top = 135
-      Width = 45
+      Width = 194
       Height = 45
       ThemeManager = AppTheme
       SymbolFont.Charset = DEFAULT_CHARSET
@@ -1345,7 +1347,7 @@ object formDemo: TformDemo
     object buttonMenuOpen: TUSymbolButton
       Left = 0
       Top = 45
-      Width = 45
+      Width = 194
       Height = 45
       ThemeManager = AppTheme
       SymbolFont.Charset = DEFAULT_CHARSET
@@ -1375,7 +1377,7 @@ object formDemo: TformDemo
     object buttonMenuRate: TUSymbolButton
       Left = 0
       Top = 225
-      Width = 45
+      Width = 194
       Height = 45
       ThemeManager = AppTheme
       SymbolFont.Charset = DEFAULT_CHARSET
@@ -1416,7 +1418,7 @@ object formDemo: TformDemo
       '   This is NORMAL style TUCaptionBar (use 3 spaces for left alig' +
       'n)'
     Font.Charset = DEFAULT_CHARSET
-    Font.Color = clBlack
+    Font.Color = clWhite
     Font.Height = -12
     Font.Name = 'Segoe UI'
     Font.Style = []
@@ -1469,6 +1471,7 @@ object formDemo: TformDemo
       Layout = tlCenter
       ThemeManager = AppTheme
       TextKind = tkHeading
+      ExplicitTop = -488
       ExplicitWidth = 71
     end
     object entryUserProfile: TUText
@@ -1491,6 +1494,7 @@ object formDemo: TformDemo
       ParentFont = False
       ThemeManager = AppTheme
       TextKind = tkEntry
+      ExplicitTop = -226
       ExplicitWidth = 69
     end
     object entryAccountType: TUText
@@ -1513,6 +1517,7 @@ object formDemo: TformDemo
       ParentFont = False
       ThemeManager = AppTheme
       TextKind = tkEntry
+      ExplicitTop = 53
       ExplicitWidth = 50
     end
     object desAccountHint: TUText
@@ -1536,6 +1541,7 @@ object formDemo: TformDemo
       WordWrap = True
       ThemeManager = AppTheme
       TextKind = tkDescription
+      ExplicitTop = 175
       ExplicitWidth = 201
     end
     object entryStorage: TUText
@@ -1558,6 +1564,7 @@ object formDemo: TformDemo
       ParentFont = False
       ThemeManager = AppTheme
       TextKind = tkEntry
+      ExplicitTop = 269
       ExplicitWidth = 76
     end
     object desStorageHint: TUText
@@ -1581,6 +1588,7 @@ object formDemo: TformDemo
       WordWrap = True
       ThemeManager = AppTheme
       TextKind = tkDescription
+      ExplicitTop = 291
       ExplicitWidth = 174
     end
     object imgAvatar: TImage
@@ -1691,6 +1699,7 @@ object formDemo: TformDemo
       ParentFont = False
       ThemeManager = AppTheme
       TextKind = tkHeading
+      ExplicitTop = 370
       ExplicitWidth = 55
     end
     object desAppVersion: TUText
@@ -1714,6 +1723,7 @@ object formDemo: TformDemo
       WordWrap = True
       ThemeManager = AppTheme
       TextKind = tkDescription
+      ExplicitTop = 448
       ExplicitWidth = 94
     end
     object desFlashVersion: TUText
@@ -1737,6 +1747,7 @@ object formDemo: TformDemo
       WordWrap = True
       ThemeManager = AppTheme
       TextKind = tkDescription
+      ExplicitTop = 470
       ExplicitWidth = 133
     end
     object desChromiumVersion: TUText
@@ -1760,6 +1771,7 @@ object formDemo: TformDemo
       WordWrap = True
       ThemeManager = AppTheme
       TextKind = tkDescription
+      ExplicitTop = 492
       ExplicitWidth = 137
     end
     object linkEmbarcadero: TUHyperLink
@@ -1776,7 +1788,7 @@ object formDemo: TformDemo
       Align = alTop
       Caption = 'https://embarcadero.com/'
       Font.Charset = DEFAULT_CHARSET
-      Font.Color = 14120960
+      Font.Color = 14051691
       Font.Height = -13
       Font.Name = 'Segoe UI'
       Font.Style = []
@@ -1788,6 +1800,7 @@ object formDemo: TformDemo
       CustomTextColors.Disabled = clMedGray
       CustomTextColors.Focused = 14120960
       URL = 'https://embarcadero.com/'
+      ExplicitTop = 514
       ExplicitWidth = 154
     end
     object entryAppTheme: TUText
@@ -1811,6 +1824,7 @@ object formDemo: TformDemo
       Layout = tlCenter
       ThemeManager = AppTheme
       TextKind = tkEntry
+      ExplicitTop = -450
       ExplicitWidth = 68
     end
     object desAccentColorHint: TUText
@@ -1834,6 +1848,7 @@ object formDemo: TformDemo
       WordWrap = True
       ThemeManager = AppTheme
       TextKind = tkDescription
+      ExplicitTop = -293
       ExplicitWidth = 163
     end
     object checkAutoSync: TUCheckBox

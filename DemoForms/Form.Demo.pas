@@ -10,7 +10,7 @@ uses
   UCL.TUSlider, UCL.TUContextMenu, UCL.TUSeparator, UCL.TUEdit, UCL.TUItemButton,
 
   //  Winapi units
-  Winapi.Windows, Winapi.Messages,
+  Winapi.Windows, Winapi.Messages, DWMApi, UxTheme,
 
   //  System units
   System.SysUtils, System.Variants, System.Classes, System.Types, System.ImageList,
@@ -22,6 +22,13 @@ uses
   Vcl.BaseImageCollection, Vcl.ImageCollection;
 
 type
+  TMARGINS = record
+    leftWidth: integer;
+    rightWidth: integer;
+    topHeight: integer;
+    bottomHeight: integer;
+  end;
+
   TformDemo = class(TUForm)
     AppTheme: TUThemeManager;
     captionbarOldStyle: TUCaptionBar;
@@ -139,6 +146,8 @@ type
     procedure sliderHorzChange(Sender: TObject);
   private
   public
+  protected
+    procedure WndProc(var Msg: TMessage); override;
   end;
 
 var
@@ -186,6 +195,23 @@ procedure TformDemo.sliderHorzChange(Sender: TObject);
 begin
   //  Change progress bar value
   progressConnected.Value := sliderHorz.Value;
+end;
+
+procedure TformDemo.WndProc(var Msg: TMessage);
+var
+  margins: _MARGINS;
+  v: Integer;
+begin
+  case (Msg.Msg) of
+  WM_NCPAINT:
+    begin
+      v := 2;
+      DwmSetWindowAttribute(Self.Handle, 2, @v, 4);
+      DwmExtendFrameIntoClientArea(Self.Handle, margins);
+    end;
+  end;
+
+  inherited WndProc(Msg);
 end;
 
 procedure TformDemo.buttonAppMaximizedClick(Sender: TObject);

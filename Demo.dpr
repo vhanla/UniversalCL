@@ -1,6 +1,11 @@
 program Demo;
 
 uses
+  madExcept,
+  madLinkDisAsm,
+  madListHardware,
+  madListProcesses,
+  madListModules,
   Vcl.Forms,
   Form.Demo in 'DemoForms\Form.Demo.pas' {formDemo},
   Vcl.Themes,

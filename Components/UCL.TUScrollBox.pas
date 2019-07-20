@@ -4,7 +4,7 @@ interface
 
 uses
   FlatSB,
-  UCL.Classes, UCL.TUThemeManager, UCL.IntAnimation,
+  UCL.Classes, UCL.TUThemeManager, UCL.IntAnimation, UCL.Utils,
   System.Classes, System.SysUtils, System.TypInfo,
   Winapi.Messages, Winapi.Windows,
   VCL.Controls, VCL.Forms, VCL.ExtCtrls, VCL.Graphics;
@@ -261,7 +261,8 @@ begin
   ThumbSize := Round(ControlSize * ControlSize / Scrollbar.Range);
   ThumbPos := Round(ControlSize * ScrollBar.Position / ScrollBar.Range);
 
-  FCanvas.Brush.Color := MINI_SCROLLBAR_COLOR;
+  //FCanvas.Brush.Color := MINI_SCROLLBAR_COLOR;
+  FCanvas.Brush.Handle := CreateSolidBrushWithAlpha(MINI_SCROLLBAR_COLOR);
 
   if ScrollOrientation = oVertical then
     begin
@@ -283,7 +284,8 @@ end;
 
 procedure TUScrollBox.HideMiniScrollbar;
 begin
-  FCanvas.Brush.Color := Color;
+  //FCanvas.Brush.Color := Color;
+  FCanvas.Brush.Handle := CreateSolidBrushWithAlpha(Color);
   if ScrollOrientation = oVertical then
     FCanvas.FillRect(Rect(Width - 5, 0, Width, Height))
   else 

@@ -3,7 +3,7 @@ unit UCL.TUSeparator;
 interface
 
 uses
-  UCL.Classes, UCL.TUThemeManager,
+  UCL.Classes, UCL.TUThemeManager, UCL.Utils,
   System.Classes, System.SysUtils, System.Types,
   VCL.Controls, VCL.Graphics;
 
@@ -153,7 +153,8 @@ begin
   ParentColor := true;
 
   //  Paint background
-  Canvas.Brush.Color := Color;
+  //Canvas.Brush.Color := Color;
+  Canvas.Brush.Handle := CreateSolidBrushWithAlpha(Color);
   Canvas.FillRect(Rect(0, 0, Width, Height));
 
   if ThemeManager = nil then
