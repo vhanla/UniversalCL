@@ -5,7 +5,7 @@ interface
 uses
   UCL.Classes, UCL.TUThemeManager, UCL.Utils,
   System.Classes, System.SysUtils, System.Types,
-  Winapi.Windows, Winapi.Messages,
+  Winapi.Windows, Winapi.Messages, GdiPAPI, GdipObj,
   VCL.Controls, VCL.Graphics, VCL.ExtCtrls, VCL.StdCtrls, VCL.ImgList;
 
 type
@@ -477,6 +477,14 @@ var
   ImgW, ImgH, ImgX, ImgY: Integer;
 
   BackColor, TextColor, DetailColor: TColor;
+
+  bmp: TBitmap;
+  gfont: TGPFont;
+  ggraph: TGPGraphics;
+  gpen: TGPPen;
+  gbrush: TGPSolidBrush;
+  gstring: TGPStringFormat;
+  gtxt: WideString;
 begin
   inherited;
 
@@ -517,6 +525,171 @@ begin
       DetailColor := DefDetailColor[aTheme, ButtonState];
     end;
 
+// Draw using GdiPlus
+  bmp := TBitmap.Create;
+  try
+    bmp.PixelFormat := pf32bit;
+    bmp.SetSize(Width, Height);
+
+    //  Paint background
+    //Canvas.Brush.Color := BackColor;
+    Canvas.Brush.Handle := CreateSolidBrushWithAlpha(BackColor);
+    Canvas.FillRect(Rect(0, 0, Width, Height));
+    bmp.Canvas.Brush.Handle := CreateSolidBrushWithAlpha(BackColor);
+    bmp.Canvas.FillRect(Rect(0, 0, Width, Height));
+
+    ggraph := TGPGraphics.Create(bmp.Canvas.Handle);
+    try
+//      ggraph.SetSmoothingMode(SmoothingModeAntiAlias);
+
+      gfont := TGPFont.Create(IconFont.Name, IconFont.Size, FontStyleRegular, UnitPoint);
+      try
+        gbrush := TGPSolidBrush.Create(MakeGDIPColor(clBlack));
+        try
+          gpen := TGPPen.Create(MakeGDIPColor(clBlack));
+          try
+            gstring := TGPStringFormat.Create;
+            try
+            //////////////////////////
+              Canvas.Font := IconFont;
+              //  Paint checkbox
+              if ShowCheckBox = true then
+                begin
+                  if IsChecked = true then
+                    begin
+                      //  Paint only check icon
+                      if ThemeManager = nil then
+                        Canvas.Font.Color := CustomActiveColor
+                      else
+                        Canvas.Font.Color := ThemeManager.ActiveColor;
+                      gbrush.SetColor(MakeGDIPColor(Canvas.Font.Color));
+
+                      ObjectH := Canvas.TextHeight('');
+                      ObjectW := Canvas.TextWidth('');
+                      Canvas.TextOut(LPos + (CheckBoxWidth - ObjectW) div 2, (Height - ObjectH) div 2, '');
+                      ggraph.DrawString('', Length(''), gfont, MakePoint(LPos + (CheckBoxWidth - ObjectW) div 2,(Height - ObjectH) / 2), nil, gbrush);
+                    end
+                  else
+                    begin
+                      //  Paint a empty box
+                      if aTheme = utLight then
+                        Canvas.Font.Color := $000000
+                      else
+                        Canvas.Font.Color := $FFFFFF;
+                      gbrush.SetColor(MakeGDIPColor(Canvas.Font.Color));
+
+                      ObjectH := Canvas.TextHeight('');
+                      ObjectW := Canvas.TextWidth('');
+                      Canvas.TextOut(LPos + (CheckBoxWidth - ObjectW) div 2, (Height - ObjectH) div 2, '');
+                      ggraph.DrawString('', Length(''), gfont, MakePoint(LPos + (CheckBoxWidth - ObjectW) div 2,(Height - ObjectH) / 2), nil, gbrush);
+                    end;
+
+                  inc(LPos, CheckBoxWidth);
+                end;
+
+              Canvas.Font.Color := TextColor;
+              gbrush.SetColor(MakeGDIPColor(Canvas.Font.Color));
+
+              inc(LPos, AlignSpace);
+              //  Paint left icon
+              if ShowLeftIcon = true then
+                if LeftIconKind = ikFontIcon then
+                  begin
+                    ObjectH := Canvas.TextHeight(LeftIcon);
+                    ObjectW := Canvas.TextWidth(LeftIcon);
+                    Canvas.TextOut(LPos + (LeftIconWidth - ObjectW) div 2, (Height - ObjectH) div 2, LeftIcon);
+                    ggraph.DrawString(LeftIcon, Length(LeftIcon), gfont, MakePoint(LPos + (leftIconWidth - ObjectW) div 2,(Height - ObjectH) / 2), nil, gbrush);
+
+                    inc(LPos, LeftIconWidth);
+                  end
+                else if (Images <> nil) and (ImageLeftIndex >= 0) then
+                  begin
+                    ImgW := Images.Width;
+                    ImgH := Images.Height;
+                    ImgX := LPos + (LeftIconWidth - ImgW) div 2;
+                    ImgY := (Height - ImgH) div 2;
+
+                    Images.Draw(Canvas, ImgX, ImgY, ImageLeftIndex, Enabled);
+                    Images.Draw(bmp.Canvas, ImgX, ImgY, ImageLeftIndex, Enabled);
+                    inc(LPos, LeftIconWidth);
+                  end;
+
+              dec(RPos, AlignSpace);
+              //  Paint right icon
+              if ShowRightIcon = true then
+                if RightIconKind = ikFontIcon then
+                  begin
+                    ObjectH := Canvas.TextHeight(RightIcon);
+                    ObjectW := Canvas.TextWidth(RightIcon);
+                    Canvas.TextOut(RPos - RightIconWidth + (RightIconWidth - ObjectW) div 2, (Height - ObjectH) div 2, RightIcon);
+                    ggraph.DrawString(RightIcon, Length(RightIcon), gfont, MakePoint(RPos - RightIconWidth + (RightIconWidth - ObjectW) div 2,(Height - ObjectH) / 2), nil, gbrush);
+
+                    dec(RPos, RightIconWidth);
+                  end
+                else if (Images <> nil) and (ImageRightIndex >= 0) then
+                  begin
+                    ImgW := Images.Width;
+                    ImgH := Images.Height;
+                    ImgX := RPos - RightIconWidth + (RightIconWidth - ImgW) div 2;
+                    ImgY := (Height - ImgH) div 2;
+
+                    Images.Draw(Canvas, ImgX, ImgY, ImageRightIndex, Enabled);
+                    Images.Draw(bmp.Canvas, ImgX, ImgY, ImageRightIndex, Enabled);
+                    dec(RPos, RightIconWidth);
+                  end;
+
+              Canvas.Font := Self.Font; //  Default font = text font
+              gfont.Free;
+              gfont := TGPFont.Create(Font.Name, Font.Size, FontStyleRegular, UnitPoint);
+
+              // Paint text
+              if ShowText = true then
+                begin
+                  Canvas.Font.Color := TextColor;
+                  gbrush.SetColor(MakeGDIPColor(TextColor));
+
+                  ObjectH := Canvas.TextHeight(Text);
+                  Canvas.TextOut(LPos + AlignSpace, (Height - ObjectH) div 2, Text);
+                  ggraph.DrawString(Text, Length(Text), gfont, MakePoint(LPos + AlignSpace,(Height - ObjectH) / 2), nil, gbrush);
+                end;
+
+              //  Paint detail
+              if ShowDetail = true then
+                begin
+                  Canvas.Font := DetailFont;
+                  gfont.Free;
+                  gfont := TGPFont.Create(DetailFont.Name, DetailFont.Size, FontStyleRegular, UnitPoint);
+                  Canvas.Font.Color := DetailColor;
+                  gbrush.SetColor(MakeGDIPColor(DetailColor));
+
+                  ObjectH := Canvas.TextHeight(Detail);
+                  ObjectW := Canvas.TextWidth(Detail);
+                  Canvas.TextOut(RPos - ObjectW - AlignSpace, (Height - ObjectH) div 2, Detail);
+                  ggraph.DrawString(Detail, Length(Detail), gfont, MakePoint(RPos - ObjectW - AlignSpace,(Height - ObjectH) / 2), nil, gbrush);
+                end;
+            //////////////////////////
+            finally
+              gstring.Free;
+            end;
+          finally
+            gpen.Free;
+          end;
+        finally
+          gbrush.Free;
+        end;
+      finally
+        gfont.Free;
+      end;
+    finally
+      ggraph.Free;
+    end;
+
+    Canvas.Draw(0, 0, bmp);
+  finally
+    bmp.Free;
+  end;
+
+  Exit;
   //  Paint background
   //Canvas.Brush.Color := BackColor;
   Canvas.Brush.Handle := CreateSolidBrushWithAlpha(BackColor);
