@@ -214,7 +214,7 @@ begin
 
     ggraph := TGPGraphics.Create(bmp.Canvas.Handle);
     try
-//      ggraph.SetSmoothingMode(SmoothingModeAntiAlias);
+      ggraph.SetSmoothingMode(SmoothingModeAntiAlias);
 
       gfont := TGPFont.Create(Font.Name, Font.Size, FontStyleRegular, UnitPoint);
       try
